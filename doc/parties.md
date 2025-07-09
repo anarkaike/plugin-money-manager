@@ -1,3 +1,17 @@
+[Voltar ao Índice Principal](../index.md)
+
+### Navegação Rápida
+
+- [Accounts](./accounts.md)
+- [Addons](./addons.md)
+- [App](./app.md)
+- [Categories](./categories.md)
+- [Currencies](./currencies.md)
+- [Quotes](./quotes.md)
+- [Reports](./reports.md)
+- [Transactions](./transactions.md)
+- [Woocommerce](./woocommerce.md)
+
 # Documentação da API: Parties
 
 Este documento detalha todos os endpoints da API relacionados ao gerenciamento de **Favorecidos (Parties)**. Um "Party" representa um terceiro envolvido em uma transação, como uma loja, uma pessoa ou uma empresa.
@@ -64,7 +78,15 @@ curl --location --request GET 'https://seu-site.com/wp-json/money-manager/v1/par
     ]
 }
 ```
-*No exemplo, o favorecido "Posto Shell" tem a categoria com ID 15 (provavelmente "Combustível") como padrão.*
+*No exemplo, "Posto Shell" tem a categoria com ID 15 (provavelmente "Combustível") como padrão.*
+
+### Instruções para o Agente de IA (n8n)
+
+Este endpoint é utilizado para listar todos os favorecidos cadastrados. O agente deve usar este endpoint quando o usuário solicitar uma lista de favorecidos ou quando precisar de informações sobre os favorecidos existentes para outras operações.
+
+### Configuração do Body/Query String/Header
+
+Este endpoint não requer um corpo de requisição (body), parâmetros de query string ou headers adicionais.
 
 ---
 
@@ -128,6 +150,25 @@ cURL --location --request POST 'https://seu-site.com/wp-json/money-manager/v1/pa
 }
 ```
 
+### Instruções para o Agente de IA (n8n)
+
+Este endpoint é utilizado para criar ou atualizar um favorecido. O agente deve usar este endpoint quando o usuário desejar adicionar uma nova favorecido ou modificar os detalhes de um favorecido existente.
+
+### Configuração do Body
+
+O corpo da requisição deve ser um JSON no seguinte formato:
+
+```json
+{
+  "item": {
+    "id": {{ $fromAI('id', `ID do favorecido para atualização. Atribua null se for uma inserção.`, 'number') }},
+    "title": "{{ $fromAI('title', `O nome do favorecido.`, 'string') }}",
+    "default_category_id": {{ $fromAI('default_category_id', `O ID da categoria a ser sugerida por padrão ao selecionar este favorecido em uma nova transação.`, 'number') }},
+    "color": "{{ $fromAI('color', `Um código de cor hexadecimal (ex: #FFC300) para a interface.`, 'string') }}"
+  }
+}
+```
+
 ---
 
 ## POST /parties/remove
@@ -172,4 +213,18 @@ cURL --location --request POST 'https://seu-site.com/wp-json/money-manager/v1/pa
 --data-raw '{
     "id": 3
 }'
+```
+
+### Instruções para o Agente de IA (n8n)
+
+Este endpoint é utilizado para excluir permanentemente um favorecido. O agente deve usar este endpoint com cautela, pois transações associadas a este favorecido não serão atualizadas e podem se tornar órfãs. Recomenda-se reatribuir transações antes de usar este endpoint.
+
+### Configuração do Body
+
+O corpo da requisição deve ser um JSON no seguinte formato:
+
+```json
+{
+  "id": {{ $fromAI('id', `O ID do favorecido a ser excluído.`, 'number') }}
+}
 ```

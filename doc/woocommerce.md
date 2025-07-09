@@ -1,3 +1,16 @@
+[Voltar ao Índice Principal](../index.md)
+
+### Navegação Rápida
+
+- [Accounts](./accounts.md)
+- [Addons](./addons.md)
+- [App](./app.md)
+- [Categories](./categories.md)
+- [Currencies](./currencies.md)
+- [Parties](./parties.md)
+- [Quotes](./quotes.md)
+- [Reports](./reports.md)
+- [Transactions](./transactions.md)
 
 # Documentação da API: WooCommerce
 
@@ -71,3 +84,25 @@ cURL --location --request POST 'https://seu-site.com/wp-json/money-manager/v1/wo
 }
 ```
 
+### Instruções para o Agente de IA (n8n)
+
+Este endpoint é utilizado para salvar a configuração completa da integração com o WooCommerce. O agente deve usar este endpoint quando o usuário desejar configurar ou atualizar as definições de como os pedidos do WooCommerce devem gerar transações no Money Manager.
+
+### Configuração do Body
+
+O corpo da requisição deve ser um JSON no seguinte formato:
+
+```json
+{
+  "item": {
+    "enabled": {{ $fromAI('enabled', `Habilita ou desabilita globalmente a integração.`, 'boolean') }},
+    "payment_methods": {{ $fromAI('payment_methods', `Lista de slugs de métodos de pagamento que devem acionar a criação de transação. Um valor null no array significa \"qualquer método\".`, 'array') }},
+    "paid_order_statuses": {{ $fromAI('paid_order_statuses', `Lista de slugs de status de pedido que são considerados \"pagos\" (ex: \"processing\", \"completed\").`, 'array') }},
+    "account_id": {{ $fromAI('account_id', `ID da conta no Money Manager onde a receita será registrada.`, 'number') }},
+    "party_id": {{ $fromAI('party_id', `(Opcional) ID do favorecido a ser associado à transação. Atribua null se não houver.`, 'number') }},
+    "category_id": {{ $fromAI('category_id', `(Opcional) ID da categoria a ser associada à transação. Atribua null se não houver.`, 'number') }},
+    "auto_delete_transactions": {{ $fromAI('auto_delete_transactions', `Se true, a transação será excluída se o status do pedido mudar para um que não está na lista de paid_order_statuses.`, 'boolean') }},
+    "configs": {{ $fromAI('configs', `Uma lista de configurações mais específicas que podem sobrescrever a configuração global (funcionalidade avançada, possivelmente para add-ons).`, 'array') }}
+  }
+}
+```

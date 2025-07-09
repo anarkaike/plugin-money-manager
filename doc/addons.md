@@ -1,3 +1,17 @@
+[Voltar ao Índice Principal](../index.md)
+
+### Navegação Rápida
+
+- [Accounts](./accounts.md)
+- [App](./app.md)
+- [Categories](./categories.md)
+- [Currencies](./currencies.md)
+- [Parties](./parties.md)
+- [Quotes](./quotes.md)
+- [Reports](./reports.md)
+- [Transactions](./transactions.md)
+- [Woocommerce](./woocommerce.md)
+
 # Documentação da API: Add-ons
 
 Este documento detalha os endpoints da API para o gerenciamento de **Add-ons**. Estes endpoints funcionam como uma interface para as funcionalidades nativas do WordPress de instalação e gerenciamento de plugins.
@@ -59,6 +73,14 @@ curl --location --request GET 'https://seu-site.com/wp-json/money-manager/v1/add
 }
 ```
 
+### Instruções para o Agente de IA (n8n)
+
+Este endpoint é utilizado para listar os add-ons disponíveis. O agente deve usar este endpoint quando o usuário solicitar a visualização dos add-ons que podem ser instalados.
+
+### Configuração do Body/Query String/Header
+
+Este endpoint não requer um corpo de requisição (body), parâmetros de query string ou headers adicionais.
+
 ---
 
 ## POST /addons/install
@@ -95,6 +117,20 @@ cURL --location --request POST 'https://seu-site.com/wp-json/money-manager/v1/ad
 }'
 ```
 
+### Instruções para o Agente de IA (n8n)
+
+Este endpoint é utilizado para instalar um novo add-on. O agente deve usar este endpoint quando o usuário desejar instalar um add-on, fornecendo o link de download.
+
+### Configuração do Body
+
+O corpo da requisição deve ser um JSON no seguinte formato:
+
+```json
+{
+  "download_link": "{{ $fromAI('download_link', `URL completa para o arquivo .zip do plugin a ser instalado.`, 'string') }}"
+}
+```
+
 ---
 
 ## POST /addons/activate
@@ -128,6 +164,20 @@ cURL --location --request POST 'https://seu-site.com/wp-json/money-manager/v1/ad
 }'
 ```
 
+### Instruções para o Agente de IA (n8n)
+
+Este endpoint é utilizado para ativar um add-on já instalado. O agente deve usar este endpoint quando o usuário desejar ativar um add-on, fornecendo o slug do plugin.
+
+### Configuração do Body
+
+O corpo da requisição deve ser um JSON no seguinte formato:
+
+```json
+{
+  "slug": "{{ $fromAI('slug', `O slug do plugin a ser ativado.`, 'string') }}"
+}
+```
+
 ---
 
 ## POST /addons/deactivate
@@ -159,4 +209,18 @@ cURL --location --request POST 'https://seu-site.com/wp-json/money-manager/v1/ad
 --data-raw '{
     "slug": "money-manager-reports-pro"
 }'
+```
+
+### Instruções para o Agente de IA (n8n)
+
+Este endpoint é utilizado para desativar um add-on ativo. O agente deve usar este endpoint quando o usuário desejar desativar um add-on, fornecendo o slug do plugin.
+
+### Configuração do Body
+
+O corpo da requisição deve ser um JSON no seguinte formato:
+
+```json
+{
+  "slug": "{{ $fromAI('slug', `O slug do plugin a ser desativado.`, 'string') }}"
+}
 ```

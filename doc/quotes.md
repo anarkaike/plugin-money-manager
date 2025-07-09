@@ -1,3 +1,16 @@
+[Voltar ao Índice Principal](../index.md)
+
+### Navegação Rápida
+
+- [Accounts](./accounts.md)
+- [Addons](./addons.md)
+- [App](./app.md)
+- [Categories](./categories.md)
+- [Currencies](./currencies.md)
+- [Parties](./parties.md)
+- [Reports](./reports.md)
+- [Transactions](./transactions.md)
+- [Woocommerce](./woocommerce.md)
 
 # Documentação da API: Quotes
 
@@ -58,6 +71,20 @@ curl --location --request GET 'https://seu-site.com/wp-json/money-manager/v1/quo
 }
 ```
 
+### Instruções para o Agente de IA (n8n)
+
+Este endpoint é utilizado para buscar a cotação mais recente para todas as moedas em uma data específica (ou na data atual, por padrão). O agente deve usar este endpoint quando precisar obter as taxas de câmbio para conversões ou exibição.
+
+### Configuração do Body/Query String/Header
+
+Este endpoint aceita um parâmetro de query string:
+
+```json
+{
+  "date": "{{ $fromAI('date', `A data para a qual buscar as cotações (formato YYYY-MM-DD). Atribua null para a data atual.`, 'string') }}"
+}
+```
+
 ---
 
 ## GET /quotes/list
@@ -101,6 +128,20 @@ curl --location --request GET 'https://seu-site.com/wp-json/money-manager/v1/quo
 }
 ```
 
+### Instruções para o Agente de IA (n8n)
+
+Este endpoint é utilizado para listar todo o histórico de cotações armazenado no banco de dados para uma única moeda. O agente deve usar este endpoint quando o usuário solicitar o histórico de cotações de uma moeda específica.
+
+### Configuração do Body/Query String/Header
+
+Este endpoint aceita um parâmetro de query string:
+
+```json
+{
+  "currency": "{{ $fromAI('currency', `O código da moeda (ex: \"USD\") para a qual o histórico será listado.`, 'string') }}"
+}
+```
+
 ---
 
 ## POST /quotes/refresh
@@ -128,6 +169,14 @@ Este endpoint não aceita parâmetros.
 cURL --location --request POST 'https://seu-site.com/wp-json/money-manager/v1/quotes/refresh' \
 --header 'Authorization: Bearer SEU_TOKEN'
 ```
+
+### Instruções para o Agente de IA (n8n)
+
+Este endpoint dispara uma atualização da cotação do dia atual para todas as moedas (exceto a base), buscando os dados na API do Yahoo Finance. O agente deve usar este endpoint quando o usuário solicitar a atualização das cotações.
+
+### Configuração do Body/Query String/Header
+
+Este endpoint não requer um corpo de requisição (body), parâmetros de query string ou headers adicionais.
 
 ---
 
@@ -159,6 +208,21 @@ cURL --location --request POST 'https://seu-site.com/wp-json/money-manager/v1/qu
     "range": "3mo",
     "currencies": ["USD", "EUR"]
 }'
+```
+
+### Instruções para o Agente de IA (n8n)
+
+Este endpoint busca e importa um grande volume de dados históricos de cotações da API do Yahoo Finance. O agente deve usar este endpoint quando o usuário solicitar o preenchimento do histórico de cotações para um período específico e/ou moedas selecionadas.
+
+### Configuração do Body
+
+O corpo da requisição deve ser um JSON no seguinte formato:
+
+```json
+{
+  "range": "{{ $fromAI('range', `O período de tempo a ser buscado. Valores permitidos: \"1d\", \"5d\", \"1mo\", \"3mo\", \"6mo\", \"1y\", \"2y\", \"5y\", \"10y\", \"ytd\", \"max\".`, 'string') }}",
+  "currencies": {{ $fromAI('currencies', `Uma lista de códigos de moeda para buscar. Atribua null se for para todas as moedas.`, 'array') }}
+}
 ```
 
 ---
@@ -198,4 +262,18 @@ cURL --location --request POST 'https://seu-site.com/wp-json/money-manager/v1/qu
 --header 'Authorization: Bearer SEU_TOKEN' \
 --header 'Content-Type: application/json' \
 --data-raw '{}'
+```
+
+### Instruções para o Agente de IA (n8n)
+
+Este endpoint exclui permanentemente os registros do histórico de cotações do banco de dados. O agente deve usar este endpoint com EXTREMA CAUTELA, pois pode apagar todo o histórico de cotações se nenhum filtro de moeda for fornecido.
+
+### Configuração do Body
+
+O corpo da requisição deve ser um JSON no seguinte formato:
+
+```json
+{
+  "currencies": {{ $fromAI('currencies', `Uma lista de códigos de moeda cujo histórico deve ser apagado. Atribua null para apagar o histórico de TODAS as moedas.`, 'array') }}
+}
 ```

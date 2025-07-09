@@ -1,3 +1,17 @@
+[Voltar ao Índice Principal](../index.md)
+
+### Navegação Rápida
+
+- [Accounts](./accounts.md)
+- [Addons](./addons.md)
+- [App](./app.md)
+- [Currencies](./currencies.md)
+- [Parties](./parties.md)
+- [Quotes](./quotes.md)
+- [Reports](./reports.md)
+- [Transactions](./transactions.md)
+- [Woocommerce](./woocommerce.md)
+
 # Documentação da API: Categories
 
 Este documento detalha todos os endpoints da API relacionados ao gerenciamento de **Categorias (Categories)**. As categorias são usadas para classificar transações e suportam uma estrutura hierárquica (categorias e subcategorias).
@@ -72,6 +86,14 @@ curl --location --request GET 'https://seu-site.com/wp-json/money-manager/v1/cat
 ```
 *No exemplo, "Supermercado" é uma subcategoria de "Alimentação".*
 
+### Instruções para o Agente de IA (n8n)
+
+Este endpoint é utilizado para listar todas as categorias cadastradas. O agente deve usar este endpoint quando o usuário solicitar uma lista de categorias ou quando precisar de informações sobre as categorias existentes para outras operações.
+
+### Configuração do Body/Query String/Header
+
+Este endpoint não requer um corpo de requisição (body), parâmetros de query string ou headers adicionais.
+
 ---
 
 ## POST /categories/save
@@ -134,6 +156,25 @@ cURL --location --request POST 'https://seu-site.com/wp-json/money-manager/v1/ca
 }
 ```
 
+### Instruções para o Agente de IA (n8n)
+
+Este endpoint é utilizado para criar ou atualizar uma categoria. O agente deve usar este endpoint quando o usuário desejar adicionar uma nova categoria ou modificar os detalhes de uma categoria existente. Para criar uma subcategoria, o `parent_id` deve ser fornecido.
+
+### Configuração do Body
+
+O corpo da requisição deve ser um JSON no seguinte formato:
+
+```json
+{
+  "item": {
+    "id": {{ $fromAI('id', `ID da categoria. Atribua null se for uma inserção.`, 'number') }},
+    "title": "{{ $fromAI('title', `O nome da categoria.`, 'string') }}",
+    "parent_id": {{ $fromAI('parent_id', `O ID da categoria pai. Atribua null se for uma categoria de nível superior.`, 'number') }},
+    "color": "{{ $fromAI('color', `Um código de cor hexadecimal (ex: #FF5733) para a interface.`, 'string') }}"
+  }
+}
+```
+
 ---
 
 ## POST /categories/remove
@@ -181,4 +222,18 @@ cURL --location --request POST 'https://seu-site.com/wp-json/money-manager/v1/ca
 --data-raw '{
     "id": 10
 }'
+```
+
+### Instruções para o Agente de IA (n8n)
+
+Este endpoint é utilizado para excluir permanentemente uma categoria. O agente deve usar este endpoint quando o usuário solicitar a remoção de uma categoria específica.
+
+### Configuração do Body
+
+O corpo da requisição deve ser um JSON no seguinte formato:
+
+```json
+{
+  "id": {{ $fromAI('id', `O ID da categoria a ser excluída.`, 'number') }}
+}
 ```

@@ -1,3 +1,16 @@
+[Voltar ao Índice Principal](../index.md)
+
+### Navegação Rápida
+
+- [Accounts](./accounts.md)
+- [Addons](./addons.md)
+- [App](./app.md)
+- [Categories](./categories.md)
+- [Currencies](./currencies.md)
+- [Parties](./parties.md)
+- [Quotes](./quotes.md)
+- [Reports](./reports.md)
+- [Woocommerce](./woocommerce.md)
 
 # Documentação da API: Transactions
 
@@ -104,6 +117,26 @@ cURL --location --request POST 'https://seu-site.com/wp-json/money-manager/v1/tr
 }
 ```
 
+### Instruções para o Agente de IA (n8n)
+
+Este endpoint é utilizado para recuperar uma lista de transações com base em um conjunto robusto de filtros. O agente deve usar este endpoint quando o usuário solicitar a listagem de transações, aplicando filtros como conta, período, data, favorecido e categoria.
+
+### Configuração do Body
+
+O corpo da requisição deve ser um JSON no seguinte formato:
+
+```json
+{
+  "account_id": {{ $fromAI('account_id', `Filtra transações para uma conta específica. Atribua null se omitido.`, 'number') }},
+  "range": "{{ $fromAI('range', `Um atalho para filtros de data comuns. Se \"advanced_filter\" for usado, este é ignorado. Valores: \"today\", \"this_month\", \"recent_30_days\", \"recent_90_days\", \"last_month\", \"recent_3_months\", \"recent_12_months\", \"this_year\", \"last_year\", \"advanced_filter\".`, 'string') }}",
+  "criteria": {{ $fromAI('criteria', `Usado com \"range\": \"advanced_filter\". Indica quais filtros avançados estão ativos. Valores: \"date_range\", \"party\", \"category\".`, 'array') }},
+  "date_from": "{{ $fromAI('date_from', `Data de início (YYYY-MM-DD) para o filtro \"date_range\". Requer \"criteria\": [\"date_range\"].`, 'string') }}",
+  "date_to": "{{ $fromAI('date_to', `Data de fim (YYYY-MM-DD) para o filtro \"date_range\". Requer \"criteria\": [\"date_range\"].`, 'string') }}",
+  "party_ids": {{ $fromAI('party_ids', `Uma lista de IDs de favorecidos. Requer \"criteria\": [\"party\"].`, 'array') }},
+  "category_ids": {{ $fromAI('category_ids', `Uma lista de IDs de categorias. Requer \"criteria\": [\"category\"].`, 'array') }}
+}
+```
+
 ---
 
 ## POST /transactions/save
@@ -158,6 +191,32 @@ Cria ou atualiza uma transação, incluindo a gestão de arquivos anexos.
 4.  **Atualiza Saldos:** Chama `Account_Manager::refresh_balance()` para todas as contas afetadas (conta de origem, de destino e, em caso de edição, as contas antigas também).
 5.  Retorna `{"result": "ok"}`.
 
+### Instruções para o Agente de IA (n8n)
+
+Este endpoint é utilizado para criar ou atualizar uma transação, incluindo a gestão de arquivos anexos. O agente deve usar este endpoint quando o usuário desejar registrar uma nova transação ou modificar uma existente.
+
+### Configuração do Body
+
+O corpo da requisição deve ser um JSON no seguinte formato:
+
+```json
+{
+  "item": {
+    "id": {{ $fromAI('id', `ID da transação para atualização. Atribua null se for uma inserção.`, 'number') }},
+    "account_id": {{ $fromAI('account_id', `ID da conta principal da transação.`, 'number') }},
+    "type": "{{ $fromAI('type', `Tipo da transação. Valores: \"income\", \"expense\", \"transfer\".`, 'string') }}",
+    "date": "{{ $fromAI('date', `Data da transação (YYYY-MM-DD).`, 'string') }}",
+    "amount": {{ $fromAI('amount', `O valor da transação. Sempre positivo.`, 'number') }},
+    "category_id": {{ $fromAI('category_id', `ID da categoria. Atribua null se não houver.`, 'number') }},
+    "party_id": {{ $fromAI('party_id', `ID do favorecido/loja. Atribua null se não houver.`, 'number') }},
+    "notes": "{{ $fromAI('notes', `Anotações.`, 'string') }}",
+    "to_account_id": {{ $fromAI('to_account_id', `ID da conta de destino. Obrigatório se o tipo for \"transfer\". Atribua null se não for uma transferência.`, 'number') }},
+    "to_amount": {{ $fromAI('to_amount', `Valor que chega na conta de destino (para conversão de moeda). Obrigatório se o tipo for \"transfer\". Atribua null se não for uma transferência.`, 'number') }},
+    "files": {{ $fromAI('files', `Lista de objetos de arquivo. Para manter um arquivo, envie seu id. Para adicionar, envie os dados do novo arquivo. Arquivos não incluídos na lista serão desvinculados.`, 'array') }}
+  }
+}
+```
+
 ---
 
 ## POST /transactions/remove
@@ -198,6 +257,20 @@ cURL --location --request POST 'https://seu-site.com/wp-json/money-manager/v1/tr
 --data-raw '{
     "ids": [101, 102]
 }'
+```
+
+### Instruções para o Agente de IA (n8n)
+
+Este endpoint é utilizado para excluir uma ou mais transações permanentemente. O agente deve usar este endpoint quando o usuário solicitar a remoção de transações específicas.
+
+### Configuração do Body
+
+O corpo da requisição deve ser um JSON no seguinte formato:
+
+```json
+{
+  "ids": {{ $fromAI('ids', `Uma lista de IDs de transações a serem excluídas.`, 'array') }}
+}
 ```
 
 ---
@@ -242,3 +315,20 @@ Realiza a importação em massa de transações simples para uma conta específi
 5.  Salva a nova transação.
 6.  Após o loop, chama `Account_Manager::refresh_balance()` uma única vez na conta de destino.
 7.  Retorna `{"result": "ok"}`.
+
+### Instruções para o Agente de IA (n8n)
+
+Este endpoint realiza a importação em massa de transações simples para uma conta específica. O agente deve usar este endpoint quando o usuário desejar importar múltiplas transações de uma vez.
+
+### Configuração do Body
+
+O corpo da requisição deve ser um JSON no seguinte formato:
+
+```json
+{
+  "account_id": {{ $fromAI('account_id', `ID da conta para a qual as transações serão importadas.`, 'number') }},
+  "party_id": {{ $fromAI('party_id', `ID de um favorecido a ser atribuído a todas as transações importadas. Atribua null se não houver.`, 'number') }},
+  "category_id": {{ $fromAI('category_id', `ID de uma categoria a ser atribuída a todas as transações importadas. Atribua null se não houver.`, 'number') }},
+  "data": {{ $fromAI('data', `Uma lista de objetos de transação. Cada objeto deve conter \"date\", \"amount\" e \"notes\".`, 'array') }}
+}
+```

@@ -1,3 +1,16 @@
+[Voltar ao Índice Principal](../index.md)
+
+### Navegação Rápida
+
+- [Accounts](./accounts.md)
+- [Addons](./addons.md)
+- [App](./app.md)
+- [Categories](./categories.md)
+- [Currencies](./currencies.md)
+- [Parties](./parties.md)
+- [Quotes](./quotes.md)
+- [Transactions](./transactions.md)
+- [Woocommerce](./woocommerce.md)
 
 # Documentação da API: Reports
 
@@ -64,7 +77,7 @@ curl --location --request GET 'https://seu-site.com/wp-json/money-manager/v1/rep
                 "category_id": 1,
                 "amount": 1250.50
             },
-            {
+            { 
                 "id": "2024-7",
                 "category_id": 3,
                 "amount": 300.00
@@ -76,6 +89,24 @@ curl --location --request GET 'https://seu-site.com/wp-json/money-manager/v1/rep
             }
         ]
     }
+}
+```
+
+### Instruções para o Agente de IA (n8n)
+
+Este endpoint gera um relatório de fluxo de caixa, totalizando receitas e despesas para um determinado período, com várias opções de filtro e agrupamento. O agente deve usar este endpoint quando o usuário solicitar um relatório de fluxo de caixa, especificando a moeda, o período, o agrupamento e, opcionalmente, o ID da conta e se deve incluir transferências.
+
+### Configuração do Body/Query String/Header
+
+Este endpoint aceita os seguintes parâmetros de query string:
+
+```json
+{
+  "currency": "{{ $fromAI('currency', `O código da moeda (ex: \"BRL\") na qual o relatório será apresentado. Todos os valores serão convertidos para esta moeda.`, 'string') }}",
+  "range": "{{ $fromAI('range', `O período de tempo para o relatório. Valores: \"recent_12_months\", \"this_year\", \"last_year\", ou um padrão \"X_years_ago\" (ex: \"0_years_ago\" para o ano atual, \"1_years_ago\" para o ano passado).`, 'string') }}",
+  "group_by": "{{ $fromAI('group_by', `Como agrupar os dados. Valores: \"month\" (agrupa por ano-mês), \"party\" (agrupa por favorecido).`, 'string') }}",
+  "account_id": {{ $fromAI('account_id', `Filtra o relatório para incluir apenas transações de uma conta específica. Atribua null se não houver filtro.`, 'number') }},
+  "include_transfers": {{ $fromAI('include_transfers', `Se true, as transferências entre contas são consideradas no cálculo de receitas e despesas. Requer que account_id seja fornecido.`, 'boolean') }}
 }
 ```
 
@@ -135,5 +166,21 @@ curl --location --request GET 'https://seu-site.com/wp-json/money-manager/v1/rep
             "range": "1_years_ago"
         }
     ]
+}
+```
+
+### Instruções para o Agente de IA (n8n)
+
+Este endpoint gera múltiplos relatórios de fluxo de caixa para diferentes períodos, permitindo a comparação entre eles. O agente deve usar este endpoint quando o usuário solicitar a comparação de receitas e despesas entre diferentes períodos, especificando a moeda, os períodos a serem comparados e o agrupamento.
+
+### Configuração do Body/Query String/Header
+
+Este endpoint aceita os seguintes parâmetros de query string:
+
+```json
+{
+  "currency": "{{ $fromAI('currency', `O código da moeda para os relatórios.`, 'string') }}",
+  "ranges": {{ $fromAI('ranges', `Um array de strings de períodos a serem comparados. Os valores são os mesmos do parâmetro \"range\" do endpoint cash-flow.`, 'array') }},
+  "group_by": "{{ $fromAI('group_by', `Como agrupar os dados em cada relatório. Valores: \"month\", \"party\".`, 'string') }}"
 }
 ```

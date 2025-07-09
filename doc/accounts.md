@@ -1,3 +1,16 @@
+[Voltar ao Índice Principal](../index.md)
+
+### Navegação Rápida
+
+- [Addons](./addons.md)
+- [App](./app.md)
+- [Categories](./categories.md)
+- [Currencies](./currencies.md)
+- [Parties](./parties.md)
+- [Quotes](./quotes.md)
+- [Reports](./reports.md)
+- [Transactions](./transactions.md)
+- [Woocommerce](./woocommerce.md)
 
 # Documentação da API: Accounts
 
@@ -73,6 +86,14 @@ curl --location --request GET 'https://seu-site.com/wp-json/money-manager/v1/acc
 }
 ```
 
+### Instruções para o Agente de IA (n8n)
+
+Este endpoint é utilizado para listar todas as contas cadastradas no sistema. O agente deve usar este endpoint quando o usuário solicitar uma lista de suas contas, ou quando precisar de informações sobre as contas existentes para outras operações.
+
+### Configuração do Body/Query String/Header
+
+Este endpoint não requer um corpo de requisição (body), parâmetros de query string ou headers adicionais.
+
 ---
 
 ## POST /accounts/save
@@ -126,6 +147,29 @@ A rota espera um objeto `item` no corpo (body) da requisição.
 ```json
 {
     "result": "ok"
+}
+```
+
+
+### Instruções para o Agente de IA (n8n)
+
+Este endpoint é utilizado para criar ou atualizar uma conta. O agente deve usar este endpoint quando o usuário desejar adicionar uma nova conta ou modificar os detalhes de uma conta existente. Se o usuário fornecer um ID, o endpoint atualizará a conta correspondente; caso contrário, criará uma nova.
+
+### Configuração do Body
+
+O corpo da requisição deve ser um JSON no seguinte formato:
+
+```json
+{
+  "item": {
+    "id": {{ $fromAI('id', `ID da conta do usuário. Atribua null se for uma inserção.`, 'number') }},
+    "title": "{{ $fromAI('title', `Título descritivo da conta`, 'string') }}",
+    "type": "{{ $fromAI('type', `Tipo de conta. Pode ser \"checking\" para conta corrente ou conta digital, \"card\" para cartão de crédito, \"cash\" para carteira com dinheiro vivo e \"debt\" para cartão de débito.`, 'string') }}",
+    "currency": "BRL",
+    "initial_balance": "{{ $fromAI('balance', `Valor atual que a conta possui`, 'string') }}",
+    "notes": "{{ $fromAI('notes', `Descrição da conta. Digite detalhes sobre a conta. Exemplo: Se é a conta principal, de emergência, e etc. Peça o usuário detalhes de quando ele utiliza essa conta e o porque.`, 'string') }}",
+    "color": "{{ $fromAI('color', `RGB da conta. Dependendo do banco que o usuário informar, busque o hexadecimal da principal cor do banco e use o hexadecimal dela.`, 'string') }}"
+  }
 }
 ```
 
@@ -187,6 +231,21 @@ curl --location --request POST 'https://seu-site.com/wp-json/money-manager/v1/ac
 ```json
 {
     "result": "ok"
+}
+```
+
+
+### Instruções para o Agente de IA (n8n)
+
+Este endpoint é utilizado para excluir permanentemente uma conta. O agente deve usar este endpoint quando o usuário solicitar a remoção de uma conta específica.
+
+### Configuração do Body
+
+O corpo da requisição deve ser um JSON no seguinte formato:
+
+```json
+{
+  "id": {{ $fromAI('id', `ID da conta a ser removida.`, 'number') }}
 }
 ```
 

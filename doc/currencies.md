@@ -1,3 +1,16 @@
+[Voltar ao Índice Principal](../index.md)
+
+### Navegação Rápida
+
+- [Accounts](./accounts.md)
+- [Addons](./addons.md)
+- [App](./app.md)
+- [Categories](./categories.md)
+- [Parties](./parties.md)
+- [Quotes](./quotes.md)
+- [Reports](./reports.md)
+- [Transactions](./transactions.md)
+- [Woocommerce](./woocommerce.md)
 
 # Documentação da API: Currencies
 
@@ -63,6 +76,14 @@ curl --location --request GET 'https://seu-site.com/wp-json/money-manager/v1/cur
 }
 ```
 *No exemplo, o Real (BRL) é a moeda base (`is_base: true`).*
+
+### Instruções para o Agente de IA (n8n)
+
+Este endpoint é utilizado para listar todas as moedas cadastradas no sistema. O agente deve usar este endpoint quando o usuário solicitar uma lista de moedas ou quando precisar de informações sobre as moedas existentes para outras operações.
+
+### Configuração do Body/Query String/Header
+
+Este endpoint não requer um corpo de requisição (body), parâmetros de query string ou headers adicionais.
 
 ---
 
@@ -133,6 +154,26 @@ cURL --location --request POST 'https://seu-site.com/wp-json/money-manager/v1/cu
 }
 ```
 
+### Instruções para o Agente de IA (n8n)
+
+Este endpoint é utilizado para criar ou atualizar uma moeda. O agente deve usar este endpoint quando o usuário desejar adicionar uma nova moeda ou modificar os detalhes de uma moeda existente. Atenção especial deve ser dada ao campo `is_base`, pois ele define a moeda base do sistema e sua alteração pode ter impactos significativos, como o exclusão do histórico de cotações.
+
+### Configuração do Body
+
+O corpo da requisição deve ser um JSON no seguinte formato:
+
+```json
+{
+  "item": {
+    "id": {{ $fromAI('id', `ID da moeda para atualização. Atribua null se for uma inserção.`, 'number') }},
+    "code": "{{ $fromAI('code', `O código de 3 letras da moeda (ISO 4217). Ex: \"USD\".`, 'string') }}",
+    "is_base": {{ $fromAI('is_base', `Define se esta é a moeda base do sistema. Só pode haver uma.`, 'boolean') }},
+    "default_quote": {{ $fromAI('default_quote', `A cotação padrão da moeda em relação à moeda base. Para a própria moeda base, este valor deve ser 1.`, 'number') }},
+    "color": "{{ $fromAI('color', `Um código de cor hexadecimal para a interface.`, 'string') }}"
+  }
+}
+```
+
 ---
 
 ## POST /currencies/remove
@@ -176,3 +217,16 @@ cURL --location --request POST 'https://seu-site.com/wp-json/money-manager/v1/cu
 }'
 ```
 
+### Instruções para o Agente de IA (n8n)
+
+Este endpoint é utilizado para excluir permanentemente uma moeda. O agente deve usar este endpoint com EXTREMA CAUTELA, pois a exclusão da moeda base ou de uma moeda em uso por contas pode levar a inconsistências graves no sistema. Recomenda-se reatribuir contas e garantir que a moeda não seja a base antes de usar este endpoint.
+
+### Configuração do Body
+
+O corpo da requisição deve ser um JSON no seguinte formato:
+
+```json
+{
+  "id": {{ $fromAI('id', `O ID da moeda a ser excluída.`, 'number') }}
+}
+```

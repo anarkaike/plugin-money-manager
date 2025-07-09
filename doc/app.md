@@ -1,3 +1,17 @@
+[Voltar ao Índice Principal](../index.md)
+
+### Navegação Rápida
+
+- [Accounts](./accounts.md)
+- [Addons](./addons.md)
+- [Categories](./categories.md)
+- [Currencies](./currencies.md)
+- [Parties](./parties.md)
+- [Quotes](./quotes.md)
+- [Reports](./reports.md)
+- [Transactions](./transactions.md)
+- [Woocommerce](./woocommerce.md)
+
 # Documentação da API: App
 
 Este documento detalha os endpoints da API relacionados à aplicação geral, como o carregamento de dados iniciais e o salvamento de configurações do usuário.
@@ -29,7 +43,7 @@ Este endpoint não aceita parâmetros de entrada.
     - Todas as Contas (`Account::rows()`)
     - Todas as Categorias (`Category::rows()`)
     - Todas as Moedas (`Currency::rows()`)
-    - Todos os Favorecidos (`Party::rows()`)
+    - Todas as Favorecidos (`Party::rows()`)
     - As cotações do dia atual (`Quote_Manager::values()`)
     - As configurações do WooCommerce (`WooCommerce_Manager::settings()`)
 3.  Todos esses dados são compilados em um único objeto de resposta.
@@ -81,6 +95,14 @@ curl --location --request GET 'https://seu-site.com/wp-json/money-manager/v1/app
     }
 }
 ```
+
+### Instruções para o Agente de IA (n8n)
+
+Este endpoint é utilizado para carregar todos os dados essenciais da aplicação de uma só vez. O agente deve usar este endpoint no carregamento inicial da aplicação ou quando precisar de um conjunto completo de dados (contas, categorias, moedas, favorecidos, cotações, configurações do WooCommerce) para exibir ou processar.
+
+### Configuração do Body/Query String/Header
+
+Este endpoint não requer um corpo de requisição (body), parâmetros de query string ou headers adicionais.
 
 ---
 
@@ -135,5 +157,19 @@ cURL --location --request POST 'https://seu-site.com/wp-json/money-manager/v1/ap
 ```json
 {
     "result": "ok"
+}
+```
+
+### Instruções para o Agente de IA (n8n)
+
+Este endpoint é utilizado para salvar metadados associados ao usuário logado, como configurações de interface e preferências. O agente deve usar este endpoint quando o usuário realizar uma ação que altere suas preferências ou configurações na aplicação.
+
+### Configuração do Body
+
+O corpo da requisição deve ser um JSON no seguinte formato:
+
+```json
+{
+  "meta": {{ $fromAI('meta', `Um objeto ou array JSON contendo os dados a serem salvos. A estrutura interna é flexível e definida pelo front-end.`, 'json') }}
 }
 ```
