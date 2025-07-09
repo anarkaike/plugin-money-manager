@@ -1,0 +1,952 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Money Manager API Documentation</title>
+  <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css">
+  <style>
+    html { box-sizing: border-box; overflow: -moz-scrollbars-vertical; overflow-y: scroll; }
+    *, *:before, *:after { box-sizing: inherit; }
+    body { margin:0; background: #fafafa; }
+  </style>
+</head>
+<body>
+<div id="swagger-ui"></div>
+<script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+<script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-standalone-preset.js"></script>
+<script>
+window.onload = function() {
+  const spec = {
+    "openapi": "3.0.0",
+    "info": {
+      "title": "Money Manager API",
+      "description": "Documentação completa da API REST para o plugin Money Manager do WordPress. Use esta interface para explorar e interagir com os endpoints da API.",
+      "version": "1.0.0"
+    },
+    "servers": [
+      {
+        "url": "{protocol}://{host}/wp-json/money-manager/v1",
+        "description": "Servidor da API",
+        "variables": {
+          "protocol": {
+            "enum": ["https", "http"],
+            "default": "https"
+          },
+          "host": {
+            "default": "seu-site.com",
+            "description": "Host do seu site WordPress (ex: localhost/meusite, www.meusite.com)"
+          }
+        }
+      }
+    ],
+    "tags": [
+      {"name": "App", "description": "Operações gerais da aplicação"},
+      {"name": "Accounts", "description": "Gerenciamento de Contas"},
+      {"name": "Transactions", "description": "Gerenciamento de Transações"},
+      {"name": "Categories", "description": "Gerenciamento de Categorias"},
+      {"name": "Parties", "description": "Gerenciamento de Favorecidos"},
+      {"name": "Currencies", "description": "Gerenciamento de Moedas e Cotações"},
+      {"name": "Quotes", "description": "Gerenciamento do Histórico de Cotações"},
+      {"name": "Reports", "description": "Endpoints para geração de Relatórios"},
+      {"name": "Add-ons", "description": "Gerenciamento de Add-ons do plugin"},
+      {"name": "WooCommerce", "description": "Configuração da Integração com WooCommerce"}
+    ],
+    "paths": {
+      "/app/load": {
+        "get": {
+          "tags": ["App"],
+          "summary": "Carrega todos os dados iniciais da aplicação",
+          "description": "Busca contas, categorias, moedas, favorecidos, cotações e configurações em uma única chamada para otimizar o carregamento do front-end.",
+          "operationId": "loadApp",
+          "responses": {
+            "200": {
+              "description": "Dados da aplicação carregados com sucesso.",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "result": {
+                        "type": "object",
+                        "properties": {
+                          "accounts": {"type": "array", "items": {"$ref": "#/components/schemas/Account"}},
+                          "categories": {"type": "array", "items": {"$ref": "#/components/schemas/Category"}},
+                          "currencies": {"type": "array", "items": {"$ref": "#/components/schemas/Currency"}},
+                          "parties": {"type": "array", "items": {"$ref": "#/components/schemas/Party"}},
+                          "quotes": {"type": "object"},
+                          "woocommerce": {"$ref": "#/components/schemas/WooCommerceSettings"}
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/app/save-meta": {
+        "post": {
+          "tags": ["App"],
+          "summary": "Salva metadados do usuário",
+          "description": "Salva um objeto JSON de configurações e preferências do usuário logado na tabela wp_usermeta.",
+          "operationId": "saveUserMeta",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "meta": {
+                      "type": "object",
+                      "description": "Objeto JSON flexível com as preferências do usuário.",
+                      "example": {"darkMode": true, "lastPage": "/reports"}
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {"description": "Sucesso", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SuccessResponse"}}}}
+          }
+        }
+      },
+      "/accounts/list": {
+        "get": {
+          "tags": ["Accounts"],
+          "summary": "Lista todas as contas",
+          "operationId": "listAccounts",
+          "responses": {
+            "200": {
+              "description": "Sucesso",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "result": {
+                        "type": "array",
+                        "items": {"$ref": "#/components/schemas/Account"}
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/accounts/save": {
+        "post": {
+          "tags": ["Accounts"],
+          "summary": "Cria ou atualiza uma conta",
+          "operationId": "saveAccount",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "item": {"$ref": "#/components/schemas/AccountInput"}
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {"description": "Sucesso", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SuccessResponse"}}}}
+          }
+        }
+      },
+      "/accounts/remove": {
+        "post": {
+          "tags": ["Accounts"],
+          "summary": "Remove uma conta",
+          "description": "Aviso: Transações associadas não são removidas ou reatribuídas, tornando-se órfãs.",
+          "operationId": "removeAccount",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {"type": "integer", "example": 15}
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {"description": "Sucesso", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SuccessResponse"}}}}
+          }
+        }
+      },
+      "/transactions/list": {
+        "post": {
+          "tags": ["Transactions"],
+          "summary": "Lista transações com filtros",
+          "operationId": "listTransactions",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/TransactionFilter"}
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Sucesso",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "result": {
+                        "type": "array",
+                        "items": {"$ref": "#/components/schemas/Transaction"}
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/transactions/save": {
+        "post": {
+          "tags": ["Transactions"],
+          "summary": "Cria ou atualiza uma transação",
+          "operationId": "saveTransaction",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "item": {"$ref": "#/components/schemas/TransactionInput"}
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {"description": "Sucesso", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SuccessResponse"}}}}
+          }
+        }
+      },
+      "/transactions/remove": {
+        "post": {
+          "tags": ["Transactions"],
+          "summary": "Remove uma ou mais transações",
+          "operationId": "removeTransactions",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ids": {"type": "array", "items": {"type": "integer"}, "example": [101, 102]}
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {"description": "Sucesso", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SuccessResponse"}}}}
+          }
+        }
+      },
+      "/transactions/import": {
+        "post": {
+          "tags": ["Transactions"],
+          "summary": "Importa transações em massa",
+          "operationId": "importTransactions",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/TransactionImport"}
+              }
+            }
+          },
+          "responses": {
+            "200": {"description": "Sucesso", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SuccessResponse"}}}}
+          }
+        }
+      },
+      "/categories/list": {
+        "get": {
+          "tags": ["Categories"],
+          "summary": "Lista todas as categorias",
+          "operationId": "listCategories",
+          "responses": {
+            "200": {
+              "description": "Sucesso",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "result": {
+                        "type": "array",
+                        "items": {"$ref": "#/components/schemas/Category"}
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/categories/save": {
+        "post": {
+          "tags": ["Categories"],
+          "summary": "Cria ou atualiza uma categoria",
+          "operationId": "saveCategory",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "item": {"$ref": "#/components/schemas/CategoryInput"}
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {"description": "Sucesso", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SuccessResponse"}}}}
+          }
+        }
+      },
+      "/categories/remove": {
+        "post": {
+          "tags": ["Categories"],
+          "summary": "Remove uma categoria",
+          "description": "Aviso: Transações e subcategorias associadas não são removidas ou reatribuídas, tornando-se órfãs.",
+          "operationId": "removeCategory",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {"type": "integer", "example": 10}
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {"description": "Sucesso", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SuccessResponse"}}}}
+          }
+        }
+      },
+      "/parties/list": {
+        "get": {
+          "tags": ["Parties"],
+          "summary": "Lista todos os favorecidos",
+          "operationId": "listParties",
+          "responses": {
+            "200": {
+              "description": "Sucesso",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "result": {
+                        "type": "array",
+                        "items": {"$ref": "#/components/schemas/Party"}
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/parties/save": {
+        "post": {
+          "tags": ["Parties"],
+          "summary": "Cria ou atualiza um favorecido",
+          "operationId": "saveParty",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "item": {"$ref": "#/components/schemas/PartyInput"}
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {"description": "Sucesso", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SuccessResponse"}}}}
+          }
+        }
+      },
+      "/parties/remove": {
+        "post": {
+          "tags": ["Parties"],
+          "summary": "Remove um favorecido",
+          "description": "Aviso: Transações associadas não são removidas ou reatribuídas, tornando-se órfãs.",
+          "operationId": "removeParty",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {"type": "integer", "example": 3}
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {"description": "Sucesso", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SuccessResponse"}}}}
+          }
+        }
+      },
+      "/currencies/list": {
+        "get": {
+          "tags": ["Currencies"],
+          "summary": "Lista todas as moedas",
+          "operationId": "listCurrencies",
+          "responses": {
+            "200": {
+              "description": "Sucesso",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "result": {
+                        "type": "array",
+                        "items": {"$ref": "#/components/schemas/Currency"}
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/currencies/save": {
+        "post": {
+          "tags": ["Currencies"],
+          "summary": "Cria ou atualiza uma moeda",
+          "description": "Contém lógica crítica e destrutiva ao alterar a moeda base. Leia a documentação completa antes de usar.",
+          "operationId": "saveCurrency",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "item": {"$ref": "#/components/schemas/CurrencyInput"}
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {"description": "Sucesso", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SuccessResponse"}}}}
+          }
+        }
+      },
+      "/currencies/remove": {
+        "post": {
+          "tags": ["Currencies"],
+          "summary": "Remove uma moeda",
+          "description": "AVISO: Operação perigosa. Não impede a remoção da moeda base ou de moedas em uso.",
+          "operationId": "removeCurrency",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {"type": "integer", "example": 3}
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {"description": "Sucesso", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SuccessResponse"}}}}
+          }
+        }
+      },
+      "/quotes/load": {
+        "get": {
+          "tags": ["Quotes"],
+          "summary": "Carrega as cotações para uma data",
+          "operationId": "loadQuotes",
+          "parameters": [
+            {"name": "date", "in": "query", "schema": {"type": "string", "format": "date"}}
+          ],
+          "responses": {
+            "200": {"description": "Sucesso"}
+          }
+        }
+      },
+      "/quotes/list": {
+        "get": {
+          "tags": ["Quotes"],
+          "summary": "Lista o histórico de cotações de uma moeda",
+          "operationId": "listQuotes",
+          "parameters": [
+            {"name": "currency", "in": "query", "required": true, "schema": {"type": "string", "example": "USD"}}
+          ],
+          "responses": {
+            "200": {
+              "description": "Sucesso",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "result": {
+                        "type": "array",
+                        "items": {"$ref": "#/components/schemas/Quote"}
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/quotes/refresh": {
+        "post": {
+          "tags": ["Quotes"],
+          "summary": "Atualiza as cotações do dia via API externa",
+          "description": "Busca os dados mais recentes da API do Yahoo Finance e salva no banco de dados.",
+          "operationId": "refreshQuotes",
+          "responses": {
+            "200": {"description": "Sucesso", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SuccessResponse"}}}}
+          }
+        }
+      },
+      "/quotes/fetch-history": {
+        "post": {
+          "tags": ["Quotes"],
+          "summary": "Busca um grande histórico de cotações",
+          "description": "AVISO: Operação lenta e intensiva. Busca dados históricos da API do Yahoo Finance para popular o banco de dados.",
+          "operationId": "fetchQuotesHistory",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "range": {"type": "string", "enum": ["1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max"], "example": "3mo"},
+                    "currencies": {"type": "array", "items": {"type": "string"}, "example": ["USD", "EUR"]}
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {"description": "Sucesso", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SuccessResponse"}}}}
+          }
+        }
+      },
+      "/quotes/clear-history": {
+        "post": {
+          "tags": ["Quotes"],
+          "summary": "Apaga o histórico de cotações",
+          "description": "AVISO: Ação destrutiva. Se o campo 'currencies' for omitido, apaga TODO o histórico.",
+          "operationId": "clearQuotesHistory",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "currencies": {"type": "array", "items": {"type": "string"}, "example": ["USD"]}
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {"description": "Sucesso", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SuccessResponse"}}}}
+          }
+        }
+      },
+      "/reports/cash-flow": {
+        "get": {
+          "tags": ["Reports"],
+          "summary": "Gera um relatório de Fluxo de Caixa",
+          "description": "Retorna dados agregados de receitas e despesas com base nos filtros. A conversão de moeda é aplicada para cada transação.",
+          "operationId": "getCashFlowReport",
+          "parameters": [
+            {"name": "currency", "in": "query", "required": true, "schema": {"type": "string", "example": "BRL"}},
+            {"name": "range", "in": "query", "required": true, "schema": {"type": "string", "enum": ["recent_12_months", "this_year", "last_year", "0_years_ago"], "example": "this_year"}},
+            {"name": "group_by", "in": "query", "required": true, "schema": {"type": "string", "enum": ["month", "party"]}},
+            {"name": "account_id", "in": "query", "schema": {"type": "integer"}},
+            {"name": "include_transfers", "in": "query", "schema": {"type": "boolean"}}
+          ],
+          "responses": {
+            "200": {"description": "Sucesso"}
+          }
+        }
+      },
+      "/reports/income-expenses": {
+        "get": {
+          "tags": ["Reports"],
+          "summary": "Gera relatórios de Receitas/Despesas para comparação",
+          "description": "Retorna múltiplos relatórios para diferentes períodos de tempo, permitindo comparações.",
+          "operationId": "getIncomeExpensesReport",
+          "parameters": [
+            {"name": "currency", "in": "query", "required": true, "schema": {"type": "string", "example": "BRL"}},
+            {"name": "ranges[]", "in": "query", "required": true, "style": "form", "explode": true, "schema": {"type": "array", "items": {"type": "string"}, "example": ["this_year", "last_year"]}},
+            {"name": "group_by", "in": "query", "required": true, "schema": {"type": "string", "enum": ["month", "party"]}}
+          ],
+          "responses": {
+            "200": {"description": "Sucesso"}
+          }
+        }
+      },
+      "/addons/list": {
+        "get": {
+          "tags": ["Add-ons"],
+          "summary": "Lista os add-ons disponíveis",
+          "description": "Busca a lista de add-ons de um servidor externo (getmoneymanager.com).",
+          "operationId": "listAddons",
+          "responses": {
+            "200": {"description": "Sucesso"}
+          }
+        }
+      },
+      "/addons/install": {
+        "post": {
+          "tags": ["Add-ons"],
+          "summary": "Instala um add-on",
+          "description": "AVISO DE SEGURANÇA: Baixa e instala um plugin a partir de uma URL. Requer permissão de 'install_plugins'.",
+          "operationId": "installAddon",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "download_link": {"type": "string", "format": "uri"}
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {"description": "Sucesso", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SuccessResponse"}}}}
+          }
+        }
+      },
+      "/addons/activate": {
+        "post": {
+          "tags": ["Add-ons"],
+          "summary": "Ativa um add-on",
+          "operationId": "activateAddon",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "slug": {"type": "string", "example": "money-manager-reports-pro"}
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {"description": "Sucesso", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SuccessResponse"}}}}
+          }
+        }
+      },
+      "/addons/deactivate": {
+        "post": {
+          "tags": ["Add-ons"],
+          "summary": "Desativa um add-on",
+          "operationId": "deactivateAddon",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "slug": {"type": "string", "example": "money-manager-reports-pro"}
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {"description": "Sucesso", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SuccessResponse"}}}}
+          }
+        }
+      },
+      "/woocommerce/save": {
+        "post": {
+          "tags": ["WooCommerce"],
+          "summary": "Salva as configurações da integração com WooCommerce",
+          "operationId": "saveWooCommerceSettings",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "item": {"$ref": "#/components/schemas/WooCommerceSettings"}
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {"description": "Sucesso", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SuccessResponse"}}}}
+          }
+        }
+      }
+    },
+    "components": {
+      "schemas": {
+        "Account": {
+          "type": "object",
+          "properties": {
+            "id": {"type": "integer", "readOnly": true},
+            "title": {"type": "string"},
+            "type": {"type": "string", "enum": ["checking", "card", "cash", "debt", "crypto"]},
+            "currency": {"type": "string", "example": "BRL"},
+            "initial_balance": {"type": "number", "format": "float"},
+            "balance": {"type": "number", "format": "float", "readOnly": true},
+            "notes": {"type": "string"},
+            "color": {"type": "string", "example": "#2980b9"}
+          }
+        },
+        "AccountInput": {
+          "type": "object",
+          "properties": {
+            "id": {"type": "integer", "description": "Opcional, para atualização"},
+            "title": {"type": "string"},
+            "type": {"type": "string", "enum": ["checking", "card", "cash", "debt", "crypto"]},
+            "currency": {"type": "string", "example": "BRL"},
+            "initial_balance": {"type": "number", "format": "float"},
+            "notes": {"type": "string"},
+            "color": {"type": "string", "example": "#2980b9"}
+          }
+        },
+        "Transaction": {
+          "type": "object",
+          "properties": {
+            "id": {"type": "integer", "readOnly": true},
+            "account_id": {"type": "integer"},
+            "to_account_id": {"type": "integer", "nullable": true},
+            "party_id": {"type": "integer", "nullable": true},
+            "category_id": {"type": "integer", "nullable": true},
+            "date": {"type": "string", "format": "date"},
+            "type": {"type": "string", "enum": ["income", "expense", "transfer"]},
+            "amount": {"type": "number", "format": "float"},
+            "to_amount": {"type": "number", "format": "float", "nullable": true},
+            "notes": {"type": "string"},
+            "files": {"type": "array", "items": {"$ref": "#/components/schemas/File"}},
+            "balance": {"type": "number", "format": "float", "readOnly": true, "description": "Calculado na listagem"}
+          }
+        },
+        "TransactionInput": {
+          "type": "object",
+          "properties": {
+            "id": {"type": "integer", "description": "Opcional, para atualização"},
+            "account_id": {"type": "integer"},
+            "to_account_id": {"type": "integer", "nullable": true},
+            "party_id": {"type": "integer", "nullable": true},
+            "category_id": {"type": "integer", "nullable": true},
+            "date": {"type": "string", "format": "date"},
+            "type": {"type": "string", "enum": ["income", "expense", "transfer"]},
+            "amount": {"type": "number", "format": "float"},
+            "to_amount": {"type": "number", "format": "float", "nullable": true},
+            "notes": {"type": "string"},
+            "files": {"type": "array", "items": {"$ref": "#/components/schemas/FileInput"}}
+          }
+        },
+        "TransactionFilter": {
+          "type": "object",
+          "properties": {
+            "account_id": {"type": "integer"},
+            "range": {"type": "string", "enum": ["today", "this_month", "recent_30_days", "recent_90_days", "last_month", "recent_3_months", "recent_12_months", "this_year", "last_year", "advanced_filter"]},
+            "criteria": {"type": "array", "items": {"type": "string", "enum": ["date_range", "party", "category"]}},
+            "date_from": {"type": "string", "format": "date"},
+            "date_to": {"type": "string", "format": "date"},
+            "party_ids": {"type": "array", "items": {"type": "integer"}},
+            "category_ids": {"type": "array", "items": {"type": "integer"}}
+          }
+        },
+        "TransactionImport": {
+          "type": "object",
+          "properties": {
+            "account_id": {"type": "integer"},
+            "party_id": {"type": "integer"},
+            "category_id": {"type": "integer"},
+            "data": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "date": {"type": "string", "format": "date"},
+                  "amount": {"type": "number", "format": "float", "description": "Positivo para receita, negativo para despesa"},
+                  "notes": {"type": "string"}
+                }
+              }
+            }
+          }
+        },
+        "File": {
+          "type": "object",
+          "properties": {
+            "id": {"type": "integer"},
+            "attachment_id": {"type": "integer"},
+            "filename": {"type": "string"},
+            "description": {"type": "string"},
+            "url": {"type": "string", "format": "uri"}
+          }
+        },
+        "FileInput": {
+          "type": "object",
+          "description": "Para manter um arquivo, envie seu 'id'. Para adicionar, envie os outros dados.",
+          "properties": {
+            "id": {"type": "integer"},
+            "attachment_id": {"type": "integer"},
+            "filename": {"type": "string"},
+            "description": {"type": "string"}
+          }
+        },
+        "Category": {
+          "type": "object",
+          "properties": {
+            "id": {"type": "integer"},
+            "title": {"type": "string"},
+            "parent_id": {"type": "integer", "nullable": true},
+            "color": {"type": "string", "example": "#FF5733"}
+          }
+        },
+        "CategoryInput": {
+          "type": "object",
+          "properties": {
+            "id": {"type": "integer", "description": "Opcional, para atualização"},
+            "title": {"type": "string"},
+            "parent_id": {"type": "integer", "nullable": true},
+            "color": {"type": "string", "example": "#FF5733"}
+          }
+        },
+        "Party": {
+          "type": "object",
+          "properties": {
+            "id": {"type": "integer"},
+            "title": {"type": "string"},
+            "default_category_id": {"type": "integer", "nullable": true},
+            "color": {"type": "string", "example": "#FFC300"}
+          }
+        },
+        "PartyInput": {
+          "type": "object",
+          "properties": {
+            "id": {"type": "integer", "description": "Opcional, para atualização"},
+            "title": {"type": "string"},
+            "default_category_id": {"type": "integer", "nullable": true},
+            "color": {"type": "string", "example": "#FFC300"}
+          }
+        },
+        "Currency": {
+          "type": "object",
+          "properties": {
+            "id": {"type": "integer"},
+            "code": {"type": "string"},
+            "is_base": {"type": "boolean"},
+            "default_quote": {"type": "number", "format": "float"},
+            "color": {"type": "string", "nullable": true}
+          }
+        },
+        "CurrencyInput": {
+          "type": "object",
+          "properties": {
+            "id": {"type": "integer", "description": "Opcional, para atualização"},
+            "code": {"type": "string"},
+            "is_base": {"type": "boolean"},
+            "default_quote": {"type": "number", "format": "float"},
+            "color": {"type": "string", "nullable": true}
+          }
+        },
+        "Quote": {
+          "type": "object",
+          "properties": {
+            "id": {"type": "integer"},
+            "currency": {"type": "string"},
+            "date": {"type": "string", "format": "date"},
+            "value": {"type": "number", "format": "float"}
+          }
+        },
+        "WooCommerceSettings": {
+          "type": "object",
+          "properties": {
+            "enabled": {"type": "boolean"},
+            "payment_methods": {"type": "array", "items": {"type": "string"}},
+            "paid_order_statuses": {"type": "array", "items": {"type": "string"}},
+            "account_id": {"type": "integer"},
+            "party_id": {"type": "integer"},
+            "category_id": {"type": "integer"},
+            "auto_delete_transactions": {"type": "boolean"},
+            "configs": {"type": "array", "items": {"type": "object"}}
+          }
+        },
+        "SuccessResponse": {
+          "type": "object",
+          "properties": {
+            "result": {"type": "string", "example": "ok"}
+          }
+        }
+      },
+      "securitySchemes": {
+        "BasicAuth": {
+          "type": "http",
+          "scheme": "basic",
+          "description": "A autenticação para a API REST do WordPress geralmente usa senhas de aplicação. No seu perfil de usuário do WordPress, gere uma nova senha de aplicação. Use seu nome de usuário e essa senha de aplicação aqui."
+        }
+      }
+    },
+    "security": [
+      {"BasicAuth": []}
+    ]
+  };
+
+  const ui = SwaggerUIBundle({
+    spec: spec,
+    dom_id: '#swagger-ui',
+    deepLinking: true,
+    presets: [
+      SwaggerUIBundle.presets.apis,
+      SwaggerUIStandalonePreset
+    ],
+    plugins: [
+      SwaggerUIBundle.plugins.DownloadUrl
+    ],
+    layout: "StandaloneLayout"
+  });
+
+  window.ui = ui;
+};
+</script>
+</body>
+</html>
